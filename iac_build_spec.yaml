@@ -1,0 +1,38 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - echo "Installing tooling..."
+      - yum -y install jq unzip >/dev/null
+      # Terraform (pin version)
+      - TF_VERSION=1.3.9
+      - curl -sSLo tf.zip https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
+      - unzip -o tf.zip -d /usr/local/bin && rm tf.zip
+      - terraform -version
+      - jq --version
+  pre_build:
+    commands:
+      - set -euo pipefail      
+      # Initialize backend
+      - cd iac/environments/dev 
+      - terraform init
+  build:
+    commands:
+      - set -euo pipefail
+      # Validate & format
+      #- terraform fmt -check
+      - terraform validate
+      # Create a plan (saved as artifact for approvals)
+      - terraform plan 
+      #- terraform apply --auto-approve 
+      - terraform destroy --auto-approve 
+  post_build:
+    commands:
+      - echo "Done."
+artifacts:
+  files:
+    - main/tfplan-*.txt
+  discard-paths: yes
+cache:
+  paths:
+    - /root/.terraform.d/plugin-cache/**/*
