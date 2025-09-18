@@ -1,0 +1,2 @@
+# iac_core_infra_project1
+_terraform_iac_core_infra_project1
